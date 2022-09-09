@@ -31,7 +31,7 @@ constexpr auto TemplateOutputHandler<ValueType>::staticDataType() -> const data:
 	// because std::integral is true for bool, char, wchar_t, char8_t, char16_t, and char32_t, which we don't want.
 	else if constexpr (utils::tools::Integral<ValueType>)
 	{
-	    return data::DataType::kBoolean;
+	    return data::DataType::kInteger;
 	}
 	else if constexpr (std::floating_point<ValueType>)
 	{
