@@ -154,7 +154,7 @@ auto TemplateOutput::dataType() const -> const data::DataType &
 {
 	// dataType() must not be called before the configuration was loaded, so the handler should have been
 	// created already.
-	if (!_handler)
+	if (!_handler) [[unlikely]]
 	{
 		throw std::logic_error("internal error: xentara::plugins::templateDriver::TemplateOutput::dataType() called before configuration has been loaded");
 	}
@@ -172,13 +172,13 @@ auto TemplateOutput::resolveAttribute(std::u16string_view name) -> const model::
 {
 	// resolveAttribute() must not be called before the configuration was loaded, so the handler should have been
 	// created already.
-	if (!_handler)
+	if (!_handler) [[unlikely]]
 	{
 		throw std::logic_error("internal error: xentara::plugins::templateDriver::TemplateOutput::resolveAttribute() called before configuration has been loaded");
 	}
 	// resolveAttribute() must not be called before references have been resolved, so the I/O batch should have been
 	// set already.
-	if (!_ioBatch)
+	if (!_ioBatch) [[unlikely]]
 	{
 		throw std::logic_error("internal error: xentara::plugins::templateDriver::TemplateOutput::resolveAttribute() called before cross references have been resolved");
 	}
@@ -204,13 +204,13 @@ auto TemplateOutput::resolveEvent(std::u16string_view name) -> std::shared_ptr<p
 {
 	// resolveAttribute() must not be called before the configuration was loaded, so the handler should have been
 	// created already.
-	if (!_handler)
+	if (!_handler) [[unlikely]]
 	{
 		throw std::logic_error("internal error: xentara::plugins::templateDriver::TemplateOutput::resolveEvent() called before configuration has been loaded");
 	}
 	// resolveEvent() must not be called before references have been resolved, so the I/O batch should have been
 	// set already.
-	if (!_ioBatch)
+	if (!_ioBatch) [[unlikely]]
 	{
 		throw std::logic_error("internal error: xentara::plugins::templateDriver::TemplateOutput::resolveEvent() called before cross references have been resolved");
 	}
@@ -230,14 +230,14 @@ auto TemplateOutput::readHandle(const model::Attribute &attribute) const noexcep
 {
 	// readHandle() must not be called before the configuration was loaded, so the handler should have been
 	// created already.
-	if (!_handler)
+	if (!_handler) [[unlikely]]
 	{
 		// Don't throw an exception, because this function is noexcept
 		return std::make_error_code(std::errc::invalid_argument);
 	}
 	// readHandle() must not be called before references have been resolved, so the I/O batch should have been
 	// set already.
-	if (!_ioBatch)
+	if (!_ioBatch) [[unlikely]]
 	{
 		// Don't throw an exception, because this function is noexcept
 		return std::make_error_code(std::errc::invalid_argument);
@@ -258,14 +258,14 @@ auto TemplateOutput::writeHandle(const model::Attribute &attribute) noexcept -> 
 {
 	// writeHandle() must not be called before the configuration was loaded, so the handler should have been
 	// created already.
-	if (!_handler)
+	if (!_handler) [[unlikely]]
 	{
 		// Don't throw an exception, because this function is noexcept
 		return std::make_error_code(std::errc::invalid_argument);
 	}
 	// readHandle() must not be called before references have been resolved, so the I/O batch should have been
 	// set already.
-	if (!_ioBatch)
+	if (!_ioBatch) [[unlikely]]
 	{
 		// Don't throw an exception, because this function is noexcept
 		return std::make_error_code(std::errc::invalid_argument);
@@ -286,7 +286,7 @@ auto TemplateOutput::attachInput(memory::Array &dataArray, std::size_t &eventCou
 {
 	// attachInput() must not be called before the configuration was loaded, so the handler should have been
 	// created already.
-	if (!_handler)
+	if (!_handler) [[unlikely]]
 	{
 		throw std::logic_error("internal error: xentara::plugins::templateDriver::TemplateOutput::attachInput() called before configuration has been loaded");
 	}
@@ -303,7 +303,7 @@ auto TemplateOutput::updateReadState(WriteSentinel &writeSentinel,
 {
 	// updateReadState() must not be called before the configuration was loaded, so the handler should have been
 	// created already.
-	if (!_handler)
+	if (!_handler) [[unlikely]]
 	{
 		throw std::logic_error("internal error: xentara::plugins::templateDriver::TemplateOutput::updateReadState() called before configuration has been loaded");
 	}
@@ -316,7 +316,7 @@ auto TemplateOutput::addToWriteCommand(WriteCommand &command) -> bool
 {
 	// addToWriteCommand() must not be called before the configuration was loaded, so the handler should have been
 	// created already.
-	if (!_handler)
+	if (!_handler) [[unlikely]]
 	{
 		throw std::logic_error("internal error: xentara::plugins::templateDriver::TemplateOutput::addToWriteCommand() called before configuration has been loaded");
 	}
@@ -329,7 +329,7 @@ auto TemplateOutput::attachOutput(memory::Array &dataArray, std::size_t &eventCo
 {
 	// attachOutput() must not be called before the configuration was loaded, so the handler should have been
 	// created already.
-	if (!_handler)
+	if (!_handler) [[unlikely]]
 	{
 		throw std::logic_error("internal error: xentara::plugins::templateDriver::TemplateOutput::attachOutput() called before configuration has been loaded");
 	}
@@ -345,7 +345,7 @@ auto TemplateOutput::updateWriteState(WriteSentinel &writeSentinel,
 {
 	// updateWriteState() must not be called before the configuration was loaded, so the handler should have been
 	// created already.
-	if (!_handler)
+	if (!_handler) [[unlikely]]
 	{
 		throw std::logic_error("internal error: xentara::plugins::templateDriver::TemplateOutput::updateWriteState() called before configuration has been loaded");
 	}
