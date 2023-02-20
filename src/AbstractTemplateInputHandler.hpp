@@ -42,7 +42,7 @@ public:
 	/// @param name The name of the attribute to resolve
 	/// @param ioBatch The I/O batch this input is attached to. This is used to resolve inherited attributes.
 	/// @return The attribute, or nullptr if we don't have an attribute with this name
-	virtual auto resolveAttribute(std::u16string_view name, TemplateIoBatch &ioBatch) -> const model::Attribute * = 0;
+	virtual auto resolveAttribute(std::string_view name, TemplateIoBatch &ioBatch) -> const model::Attribute * = 0;
 
 	/// @brief Resolves an event.
 	/// @param name The name of the event to resolve
@@ -55,7 +55,7 @@ public:
 	/// return value, so that the returned pointer will share ownership information with pointers to the parent object.
 	/// @endparblock
 	/// @return The event, or nullptr if we don't have an event with this name
-	virtual auto resolveEvent(std::u16string_view name, TemplateIoBatch &ioBatch, std::shared_ptr<void> parent) -> std::shared_ptr<process::Event> = 0;
+	virtual auto resolveEvent(std::string_view name, TemplateIoBatch &ioBatch, std::shared_ptr<void> parent) -> std::shared_ptr<process::Event> = 0;
 
 	/// @brief Creates a read-handle for an attribute that belong to this state.
 	/// @param attribute The attribute to create the handle for
