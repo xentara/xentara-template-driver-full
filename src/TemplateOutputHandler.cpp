@@ -156,12 +156,12 @@ auto TemplateOutputHandler<ValueType>::attachReadState(memory::Array &dataArray,
 template <typename ValueType>
 auto TemplateOutputHandler<ValueType>::updateReadState(WriteSentinel &writeSentinel,
 	std::chrono::system_clock::time_point timeStamp,
-	const utils::eh::Failable<std::reference_wrapper<const ReadCommand::Payload>> &payloadOrError,
+	const utils::eh::expected<std::reference_wrapper<const ReadCommand::Payload>, std::error_code> &payloadOrError,
 	const CommonReadState::Changes &commonChanges,
 	PendingEventList &eventsToFire) -> void
 {
 	// Check if we have a valid payload
-	if (const auto payload = payloadOrError.value())
+	if (payloadOrError)
 	{
 		/// @todo decode the value from the payload data
 		ValueType value = {};
@@ -199,7 +199,7 @@ auto TemplateOutputHandler<ValueType>::updateReadState(WriteSentinel &writeSenti
 	else
 	{
 		// Update the read state with the error
-		_readState.update(writeSentinel, timeStamp, payloadOrError.error(), commonChanges, eventsToFire);
+		_readState.update(writeSentinel, timeStamp, utils::eh::unexpected(payloadOrError.error()), commonChanges, eventsToFire);
 	}
 }
 

@@ -97,7 +97,7 @@ public:
 	/// @todo add parameters needed to decode the value from the payload of a read command, like e.g. a data offset.
 	virtual auto updateReadState(WriteSentinel &writeSentinel,
 		std::chrono::system_clock::time_point timeStamp,
-		const utils::eh::Failable<std::reference_wrapper<const ReadCommand::Payload>> &payloadOrError,
+		const utils::eh::expected<std::reference_wrapper<const ReadCommand::Payload>, std::error_code> &payloadOrError,
 		const CommonReadState::Changes &commonChanges,
 		PendingEventList &eventsToFire) -> void = 0;
 		

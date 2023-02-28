@@ -297,7 +297,7 @@ auto TemplateOutput::attachInput(memory::Array &dataArray, std::size_t &eventCou
 
 auto TemplateOutput::updateReadState(WriteSentinel &writeSentinel,
 	std::chrono::system_clock::time_point timeStamp,
-	const utils::eh::Failable<std::reference_wrapper<const ReadCommand::Payload>> &payloadOrError,
+	const utils::eh::expected<std::reference_wrapper<const ReadCommand::Payload>, std::error_code> &payloadOrError,
 	const CommonReadState::Changes &commonChanges,
 	PendingEventList &eventsToFire) -> void
 {
