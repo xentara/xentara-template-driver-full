@@ -4,9 +4,8 @@
 #include "AbstractInput.hpp"
 #include "AbstractTemplateInputHandler.hpp"
 
-#include <xentara/io/Io.hpp>
-#include <xentara/io/IoClass.hpp>
-#include <xentara/plugin/EnableSharedFromThis.hpp>
+#include <xentara/skill/DataPoint.hpp>
+#include <xentara/skill/EnableSharedFromThis.hpp>
 #include <xentara/utils/json/decoder/Value.hpp>
 
 #include <functional>
@@ -18,11 +17,11 @@ namespace xentara::plugins::templateDriver
 using namespace std::literals;
 
 class TemplateIoComponent;
-class TemplateIoBatch;
+class TemplateBatchTransaction;
 
 /// @brief A class representing a specific type of input.
 /// @todo rename this class to something more descriptive
-class TemplateInput final : public io::Io, public AbstractInput, public plugin::EnableSharedFromThis<TemplateInput>
+class TemplateInput final : public skill::DataPoint, public AbstractInput, public skill::EnableSharedFromThis<TemplateInput>
 {
 private:
 	/// @brief A structure used to store the class specific attributes within an element's configuration
@@ -33,7 +32,7 @@ private:
 	
 public:
 	/// @brief The class object containing meta-information about this element type
-	class Class final : public io::IoClass
+	class Class final : public skill::Element::Class
 	{
 	public:
 		/// @brief Gets the global object
@@ -48,7 +47,7 @@ public:
             return _configHandle;
         }
 
-		/// @name Virtual Overrides for io::IoClass
+		/// @name Virtual Overrides for skill::Element::Class
 		/// @{
 
 		auto name() const -> std::string_view final
@@ -60,7 +59,7 @@ public:
 		auto uuid() const -> utils::core::Uuid final
 		{
 			/// @todo assign a unique UUID
-			return "cccccccc-cccc-cccc-cccc-cccccccccccc"_uuid;
+			return "deadbeef-dead-beef-dead-beefdeadbeef"_uuid;
 		}
 
 		/// @}
@@ -79,18 +78,18 @@ public:
 	{
 	}
 
-	/// @name Virtual Overrides for io::Io
+	/// @name Virtual Overrides for skill::DataPoint
 	/// @{
 	
 	auto dataType() const -> const data::DataType & final;
 
 	auto directions() const -> io::Directions final;
 
-	auto resolveAttribute(std::string_view name) -> const model::Attribute * final;
+	auto forEachAttribute(const model::ForEachAttributeFunction &function) const -> bool final;
 
-	auto resolveEvent(std::string_view name) -> std::shared_ptr<process::Event> final;
+	auto forEachEvent(const model::ForEachEventFunction &function) -> bool final;
 
-	auto readHandle(const model::Attribute &attribute) const noexcept -> data::ReadHandle final;
+	auto makeReadHandle(const model::Attribute &attribute) const noexcept -> std::optional<data::ReadHandle> final;
 
 	/// @}
 
@@ -113,13 +112,13 @@ public:
 	/// @}
 
 protected:
-	/// @name Virtual Overrides for io::Io
+	/// @name Virtual Overrides for skill::DataPoint
 	/// @{
 
 	auto loadConfig(const ConfigIntializer &initializer,
 		utils::json::decoder::Object &jsonObject,
 		config::Resolver &resolver,
-		const FallbackConfigHandler &fallbackHandler) -> void final;
+		const config::FallbackHandler &fallbackHandler) -> void final;
 
 	/// @}
 
@@ -131,9 +130,9 @@ private:
 	/// @todo give this a more descriptive name, e.g. "_device"
 	std::reference_wrapper<TemplateIoComponent> _ioComponent;
 
-	/// @brief The I/O batch this input belongs to, or nullptr if it hasn't been loaded yet.
+	/// @brief The batch transaction this input belongs to, or nullptr if it hasn't been loaded yet.
 	/// @todo give this a more descriptive name, e.g. "_poll"
-	TemplateIoBatch *_ioBatch { nullptr };
+	TemplateBatchTransaction *_batchTransaction { nullptr };
 
 	/// @brief The handler for data type specific functionality, or nullptr, if the data type hans not been loaded yet
 	std::unique_ptr<AbstractTemplateInputHandler> _handler;

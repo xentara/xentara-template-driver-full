@@ -8,12 +8,14 @@
 
 #include <xentara/model/Attribute.hpp>
 
+#include <string>
+
 namespace xentara::plugins::templateDriver
 {
 
 using namespace std::literals;
 
-class TemplateIoBatch;
+class TemplateBatchTransaction;
 
 /// @brief Data type specific functionality for TemplateOutput.
 ///
@@ -31,13 +33,13 @@ public:
 
 	auto dataType() const -> const data::DataType & final;
 
-	auto resolveAttribute(std::string_view name, TemplateIoBatch &ioBatch) -> const model::Attribute * final;
+	auto forEachAttribute(const model::ForEachAttributeFunction &function, TemplateBatchTransaction &batchTransaction) const -> bool final;
 
-	auto resolveEvent(std::string_view name, TemplateIoBatch &ioBatch, std::shared_ptr<void> parent) -> std::shared_ptr<process::Event> final;
+	auto forEachEvent(const model::ForEachEventFunction &function, TemplateBatchTransaction &batchTransaction, std::shared_ptr<void> parent) -> bool final;
 
-	auto readHandle(const model::Attribute &attribute, TemplateIoBatch &ioBatch) const noexcept -> std::optional<data::ReadHandle> final;
+	auto makeReadHandle(const model::Attribute &attribute, TemplateBatchTransaction &batchTransaction) const noexcept -> std::optional<data::ReadHandle> final;
 
-	auto writeHandle(const model::Attribute &attribute, TemplateIoBatch &ioBatch, std::shared_ptr<void> parent) noexcept -> std::optional<data::WriteHandle> final;
+	auto makeWriteHandle(const model::Attribute &attribute, TemplateBatchTransaction &batchTransaction, std::shared_ptr<void> parent) noexcept -> std::optional<data::WriteHandle> final;
 	
 	auto attachReadState(memory::Array &dataArray, std::size_t &eventCount) -> void final;
 
@@ -100,5 +102,6 @@ extern template class TemplateOutputHandler<std::int32_t>;
 extern template class TemplateOutputHandler<std::int64_t>;
 extern template class TemplateOutputHandler<float>;
 extern template class TemplateOutputHandler<double>;
+extern template class TemplateOutputHandler<std::string>;
 
 } // namespace xentara::plugins::templateDriver

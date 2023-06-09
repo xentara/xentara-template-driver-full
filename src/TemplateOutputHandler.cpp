@@ -2,7 +2,7 @@
 #include "TemplateOutputHandler.hpp"
 
 #include "Attributes.hpp"
-#include "TemplateIoBatch.hpp"
+#include "TemplateBatchTransaction.hpp"
 
 #include <xentara/data/DataType.hpp>
 #include <xentara/data/ReadHandle.hpp>
@@ -37,6 +37,10 @@ constexpr auto TemplateOutputHandler<ValueType>::staticDataType() -> const data:
 	{
 	    return data::DataType::kFloatingPoint;
 	}
+	else if constexpr (utils::tools::StringType<ValueType>)
+	{
+	    return data::DataType::kString;
+	}
 }
 
 template <typename ValueType>
@@ -46,63 +50,40 @@ auto TemplateOutputHandler<ValueType>::dataType() const -> const data::DataType 
 }
 
 template <typename ValueType>
-auto TemplateOutputHandler<ValueType>::resolveAttribute(std::string_view name, TemplateIoBatch &ioBatch) -> const model::Attribute *
+auto TemplateOutputHandler<ValueType>::forEachAttribute(const model::ForEachAttributeFunction &function, TemplateBatchTransaction &batchTransaction) const -> bool
 {
-	// Handle the value attribute separately
-	if (name == kValueAttribute)
-	{
-		return &kValueAttribute;
-	}
+	return
+		// Handle the value attribute separately
+		function(kValueAttribute) ||
 
-	// Check the read state attributes
-	if (auto attribute = _readState.resolveAttribute(name))
-	{
-		return attribute;
-	}
-	// Also check the common read state attributes from the I/O batch
-	if (auto attribute = ioBatch.resolveReadStateAttribute(name))
-	{
-		return attribute;
-	}
+		// Handle the read state attributes
+		_readState.forEachAttribute(function) ||
+		// Also handle the common read state attributes from the batch transaction
+		batchTransaction.forEachReadStateAttribute(function) ||
 
-	// Check the write state attributes
-	if (auto attribute = _writeState.resolveAttribute(name))
-	{
-		return attribute;
-	}
-
-	return nullptr;
+		// Handle the write state attributes
+		_writeState.forEachAttribute(function);
 }
 
 template <typename ValueType>
-auto TemplateOutputHandler<ValueType>::resolveEvent(std::string_view name, TemplateIoBatch &ioBatch, std::shared_ptr<void> parent) -> std::shared_ptr<process::Event>
+auto TemplateOutputHandler<ValueType>::forEachEvent(const model::ForEachEventFunction &function, TemplateBatchTransaction &batchTransaction, std::shared_ptr<void> parent) -> bool
 {
-	// Check the read state events
-	if (auto event = _readState.resolveEvent(name, parent))
-	{
-		return event;
-	}
-	// Also check the common read state events from the I/O batch
-	if (auto event = ioBatch.resolveReadStateEvent(name))
-	{
-		return event;
-	}
+	return
+		// Handle the read state events
+		_readState.forEachEvent(function, parent) ||
+		// Also handle the common read state events from the batch transaction
+		batchTransaction.forEachReadStateEvent(function) ||
 
-	// Check the write state events
-	if (auto event = _writeState.resolveEvent(name, parent))
-	{
-		return event;
-	}
-
-	return nullptr;
+		// Handle the write state events
+		_writeState.forEachEvent(function, parent);
 }
 
 template <typename ValueType>
-auto TemplateOutputHandler<ValueType>::readHandle(const model::Attribute &attribute, TemplateIoBatch &ioBatch) const noexcept -> std::optional<data::ReadHandle>
+auto TemplateOutputHandler<ValueType>::makeReadHandle(const model::Attribute &attribute, TemplateBatchTransaction &batchTransaction) const noexcept -> std::optional<data::ReadHandle>
 {
 	// Get the data blocks
-	const auto &readDataBlock = ioBatch.readDataBlock();
-	const auto &writeDataBlock = ioBatch.writeDataBlock();
+	const auto &readDataBlock = batchTransaction.readDataBlock();
+	const auto &writeDataBlock = batchTransaction.writeDataBlock();
 	
 	// Handle the value attribute separately
 	if (attribute == kValueAttribute)
@@ -110,28 +91,28 @@ auto TemplateOutputHandler<ValueType>::readHandle(const model::Attribute &attrib
 		return _readState.valueReadHandle(readDataBlock);
 	}
 	
-	// Check the read state attributes
-	if (auto handle = _readState.readHandle(readDataBlock, attribute))
+	// Handle the read state attributes
+	if (auto handle = _readState.makeReadHandle(readDataBlock, attribute))
 	{
-		return *handle;
+		return handle;
 	}
-	// Also check the common read state attributes from the I/O batch
-	if (auto handle = ioBatch.readStateReadHandle(attribute))
+	// Also handle the common read state attributes from the batch transaction
+	if (auto handle = batchTransaction.makeReadStateReadHandle(attribute))
 	{
-		return *handle;
+		return handle;
 	}
 
-	// Check the write state attributes
-	if (auto handle = _writeState.readHandle(writeDataBlock, attribute))
+	// Handle the write state attributes
+	if (auto handle = _writeState.makeReadHandle(writeDataBlock, attribute))
 	{
-		return *handle;
+		return handle;
 	}
 
 	return std::nullopt;
 }
 
 template <typename ValueType>
-auto TemplateOutputHandler<ValueType>::writeHandle(const model::Attribute &attribute, TemplateIoBatch &ioBatch, std::shared_ptr<void> parent) noexcept -> std::optional<data::WriteHandle>
+auto TemplateOutputHandler<ValueType>::makeWriteHandle(const model::Attribute &attribute, TemplateBatchTransaction &batchTransaction, std::shared_ptr<void> parent) noexcept -> std::optional<data::WriteHandle>
 {
 	// Handle the value attribute, which is the only writable attribute
 	if (attribute == kValueAttribute)
@@ -169,8 +150,8 @@ auto TemplateOutputHandler<ValueType>::updateReadState(WriteSentinel &writeSenti
 		/// @todo it may be advantageous to split the decoding of the value up according to value type, either by using helper functions,
 		/// or using if constexpr().
 		//
-		// For example, you could create a function decodeValue(), which would call helper functions named decodeBoolean(), decodeInteger(), and decodeFloatingPoint().
-		// This functions could be implemnted like this:
+		// For example, you could create a function decodeValue(), which would call helper functions named decodeBoolean(), decodeInteger(),
+		// decodeFloatingPoint(), and decodeString(). This function could be implemented like this:
 		// 
 		// template <typename ValueType>
 		// auto TemplateOutputHandler<ValueType>decodeValue(const ReadCommand::Payload &payload) -> dectype(auto)
@@ -186,6 +167,10 @@ auto TemplateOutputHandler<ValueType>::updateReadState(WriteSentinel &writeSenti
 		//     else if constexpr (std::floating_point<ValueType>)
 		//     {
 		//         return decodeFloatingPoint(payload);
+		//     }
+		//     else if constexpr (utils::tools::StringType<ValueType>)
+		//     {
+		//         return decodeString(payload);
 		//     }
 		// }
 		// 
@@ -225,8 +210,9 @@ auto TemplateOutputHandler<ValueType>::addToWriteCommand(WriteCommand &command) 
 	/// @todo it may be advantageous to split this function up according to value type, either using explicit 
 	/// template specialization, or using if constexpr().
 	//
-	// For example, this function could be split into addBooleanToWriteCommand(), addIntegerToWriteCommand(), and addFloatingPointToWriteCommand() functions.
-	// These functions could then be called like this:
+	// For example, this function could be split into addBooleanToWriteCommand(), addIntegerToWriteCommand(),
+	// addFloatingPointToWriteCommand(), and addStringToWriteCommand() functions. These functions could then
+	// be called like this:
 	//
 	// if constexpr (std::same_as<ValueType, bool>)
 	// {
@@ -239,6 +225,10 @@ auto TemplateOutputHandler<ValueType>::addToWriteCommand(WriteCommand &command) 
 	// else if constexpr (std::floating_point<ValueType>)
 	// {
 	//     addFloatingPointToWriteCommand(command, *pendingValue);
+	// }
+	// else if constexpr (utils::tools::StringType<ValueType>)
+	// {
+	//     addStringToWriteCommand(command, *pendingValue);
 	// }
 	//
 	// To determine if a type is an integer type, you should use xentara::utils::Tools::Integral instead of std::integral,
@@ -270,5 +260,6 @@ template class TemplateOutputHandler<std::int32_t>;
 template class TemplateOutputHandler<std::int64_t>;
 template class TemplateOutputHandler<float>;
 template class TemplateOutputHandler<double>;
+template class TemplateOutputHandler<std::string>;
 
 } // namespace xentara::plugins::templateDriver

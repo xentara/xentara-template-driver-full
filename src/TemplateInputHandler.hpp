@@ -6,6 +6,8 @@
 
 #include <xentara/model/Attribute.hpp>
 
+#include <string>
+
 namespace xentara::plugins::templateDriver
 {
 
@@ -25,11 +27,11 @@ public:
 
 	auto dataType() const -> const data::DataType & final;
 
-	auto resolveAttribute(std::string_view name, TemplateIoBatch &ioBatch) -> const model::Attribute * final;
+	auto forEachAttribute(const model::ForEachAttributeFunction &function, TemplateBatchTransaction &batchTransaction) const -> bool final;
 
-	auto resolveEvent(std::string_view name, TemplateIoBatch &ioBatch, std::shared_ptr<void> parent) -> std::shared_ptr<process::Event> final;
+	auto forEachEvent(const model::ForEachEventFunction &function, TemplateBatchTransaction &batchTransaction, std::shared_ptr<void> parent) -> bool final;
 
-	auto readHandle(const model::Attribute &attribute, TemplateIoBatch &ioBatch) const noexcept -> std::optional<data::ReadHandle> final;
+	auto makeReadHandle(const model::Attribute &attribute, TemplateBatchTransaction &batchTransaction) const noexcept -> std::optional<data::ReadHandle> final;
 	
 	auto attachReadState(memory::Array &dataArray, std::size_t &eventCount) -> void final;
 
@@ -70,5 +72,6 @@ extern template class TemplateInputHandler<std::int32_t>;
 extern template class TemplateInputHandler<std::int64_t>;
 extern template class TemplateInputHandler<float>;
 extern template class TemplateInputHandler<double>;
+extern template class TemplateInputHandler<std::string>;
 
 } // namespace xentara::plugins::templateDriver

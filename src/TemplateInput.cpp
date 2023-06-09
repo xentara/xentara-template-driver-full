@@ -3,11 +3,15 @@
 
 #include "AbstractTemplateInputHandler.hpp"
 #include "TemplateInputHandler.hpp"
-#include "TemplateIoBatch.hpp"
+#include "TemplateBatchTransaction.hpp"
 
+#include <xentara/config/FallbackHandler.hpp>
 #include <xentara/config/Resolver.hpp>
 #include <xentara/data/DataType.hpp>
 #include <xentara/data/ReadHandle.hpp>
+#include <xentara/model/Attribute.hpp>
+#include <xentara/model/ForEachAttributeFunction.hpp>
+#include <xentara/model/ForEachEventFunction.hpp>
 #include <xentara/utils/json/decoder/Object.hpp>
 #include <xentara/utils/json/decoder/Errors.hpp>
 
@@ -21,7 +25,7 @@ TemplateInput::Class TemplateInput::Class::_instance;
 auto TemplateInput::loadConfig(const ConfigIntializer &initializer,
 		utils::json::decoder::Object &jsonObject,
 		config::Resolver &resolver,
-		const FallbackConfigHandler &fallbackHandler) -> void
+		const config::FallbackHandler &fallbackHandler) -> void
 {
 	// Get a reference that allows us to modify our own config attributes
     auto &&configAttributes = initializer[Class::instance().configHandle()];
@@ -36,12 +40,12 @@ auto TemplateInput::loadConfig(const ConfigIntializer &initializer,
 			_handler = createHandler(value);
 		}
 		/// @todo use a more descriptive keyword, e.g. "poll"
-		else if (name == "ioBatch"sv)
+		else if (name == "batchTransaction"sv)
 		{
-			resolver.submit<TemplateIoBatch>(value, [this](std::reference_wrapper<TemplateIoBatch> ioBatch)
+			resolver.submit<TemplateBatchTransaction>(value, [this](std::reference_wrapper<TemplateBatchTransaction> batchTransaction)
 				{ 
-					_ioBatch = &ioBatch.get();
-					ioBatch.get().addInput(*this);
+					_batchTransaction = &batchTransaction.get();
+					batchTransaction.get().addInput(*this);
 				});
 			ioBatchLoaded = true;
 		}
@@ -74,11 +78,11 @@ auto TemplateInput::loadConfig(const ConfigIntializer &initializer,
 		/// @todo replace "template input" with a more descriptive name
 		utils::json::decoder::throwWithLocation(jsonObject, std::runtime_error("Missing data type in template input"));
 	}
-	// Make sure that an I/O batch was specified
+	// Make sure that a batch transaction was specified
 	if (!ioBatchLoaded)
 	{
-		/// @todo replace "I/O batch" and "template input" with more descriptive names
-		utils::json::decoder::throwWithLocation(jsonObject, std::runtime_error("missing I/O batch in template input"));
+		/// @todo replace "batch transaction" and "template input" with more descriptive names
+		utils::json::decoder::throwWithLocation(jsonObject, std::runtime_error("missing batch transaction in template input"));
 	}
 	/// @todo perform consistency and completeness checks
 	if (!"TODO")
@@ -138,6 +142,10 @@ auto TemplateInput::createHandler(utils::json::decoder::Value &value) -> std::un
 	{
 		return std::make_unique<TemplateInputHandler<double>>();
 	}
+	else if (keyword == "string"sv)
+	{
+		return std::make_unique<TemplateInputHandler<std::string>>();
+	}
 
 	// The keyword is not known
 	else
@@ -148,6 +156,7 @@ auto TemplateInput::createHandler(utils::json::decoder::Value &value) -> std::un
 
 	return std::unique_ptr<AbstractTemplateInputHandler>();
 }
+
 auto TemplateInput::dataType() const -> const data::DataType &
 {
 	// dataType() must not be called before the configuration was loaded, so the handler should have been
@@ -166,84 +175,76 @@ auto TemplateInput::directions() const -> io::Directions
 	return io::Direction::Input;
 }
 
-auto TemplateInput::resolveAttribute(std::string_view name) -> const model::Attribute *
+auto TemplateInput::forEachAttribute(const model::ForEachAttributeFunction &function) const -> bool
 {
-	// resolveAttribute() must not be called before the configuration was loaded, so the handler should have been
+	// forEachAttribute() must not be called before the configuration was loaded, so the handler should have been
 	// created already.
 	if (!_handler) [[unlikely]]
 	{
-		throw std::logic_error("internal error: xentara::plugins::templateDriver::TemplateInput::resolveAttribute() called before configuration has been loaded");
+		throw std::logic_error("internal error: xentara::plugins::templateDriver::TemplateInput::forEachAttribute() called before configuration has been loaded");
 	}
-	// resolveAttribute() must not be called before references have been resolved, so the I/O batch should have been
+	// forEachAttribute() must not be called before references have been resolved, so the batch transaction should have been
 	// set already.
-	if (!_ioBatch) [[unlikely]]
+	if (!_batchTransaction) [[unlikely]]
 	{
-		throw std::logic_error("internal error: xentara::plugins::templateDriver::TemplateInput::resolveAttribute() called before cross references have been resolved");
+		throw std::logic_error("internal error: xentara::plugins::templateDriver::TemplateInput::forEachAttribute() called before cross references have been resolved");
 	}
 
-	// Check the handler attributes
-	if (auto attribute = _handler->resolveAttribute(name, *_ioBatch))
-	{
-		return attribute;
-	}
+	return
+		// Handle the handler attributes
+		_handler->forEachAttribute(function, *_batchTransaction);
 
-	/// @todo add any additional attributes this class supports, including attributes inherited from the I/O component and the I/O batch
-
-	return nullptr;
+	/// @todo handle any additional attributes this class supports, including attributes inherited from the I/O component and the batch transaction
 }
 
-auto TemplateInput::resolveEvent(std::string_view name) -> std::shared_ptr<process::Event>
+auto TemplateInput::forEachEvent(const model::ForEachEventFunction &function) -> bool
 {
-	// resolveAttribute() must not be called before the configuration was loaded, so the handler should have been
+	// forEachAttribute() must not be called before the configuration was loaded, so the handler should have been
 	// created already.
 	if (!_handler) [[unlikely]]
 	{
-		throw std::logic_error("internal error: xentara::plugins::templateDriver::TemplateInput::resolveEvent() called before configuration has been loaded");
+		throw std::logic_error("internal error: xentara::plugins::templateDriver::TemplateInput::forEachEvent() called before configuration has been loaded");
 	}
-	// resolveEvent() must not be called before references have been resolved, so the I/O batch should have been
+	// forEachEvent() must not be called before references have been resolved, so the batch transaction should have been
 	// set already.
-	if (!_ioBatch) [[unlikely]]
+	if (!_batchTransaction) [[unlikely]]
 	{
-		throw std::logic_error("internal error: xentara::plugins::templateDriver::TemplateInput::resolveEvent() called before cross references have been resolved");
+		throw std::logic_error("internal error: xentara::plugins::templateDriver::TemplateInput::forEachEvent() called before cross references have been resolved");
 	}
 
-	// Check the handler events
-	if (auto event = _handler->resolveEvent(name, *_ioBatch, sharedFromThis()))
-	{
-		return event;
-	}
+	return
+		// Handle the handler events
+		_handler->forEachEvent(function, *_batchTransaction, sharedFromThis());
 
-	/// @todo add any additional events this class supports, including events inherited from the I/O component and the I/O batch
-
-	return nullptr;
+	/// @todo handle any additional events this class supports, including events inherited from the I/O component and the batch transaction
 }
 
-auto TemplateInput::readHandle(const model::Attribute &attribute) const noexcept -> data::ReadHandle
+auto TemplateInput::makeReadHandle(const model::Attribute &attribute) const noexcept -> std::optional<data::ReadHandle>
 {
-	// readHandle() must not be called before the configuration was loaded, so the handler should have been
+	// makeReadHandle() must not be called before the configuration was loaded, so the handler should have been
 	// created already.
 	if (!_handler) [[unlikely]]
 	{
 		// Don't throw an exception, because this function is noexcept
 		return std::make_error_code(std::errc::invalid_argument);
 	}
-	// readHandle() must not be called before references have been resolved, so the I/O batch should have been
+	// makeReadHandle() must not be called before references have been resolved, so the batch transaction should have been
 	// set already.
-	if (!_ioBatch) [[unlikely]]
+	if (!_batchTransaction) [[unlikely]]
 	{
 		// Don't throw an exception, because this function is noexcept
 		return std::make_error_code(std::errc::invalid_argument);
 	}
 	
-	// Check the handler attributes
-	if (auto handle = _handler->readHandle(attribute, *_ioBatch))
+	// Handle the handler attributes
+	if (auto handle = _handler->makeReadHandle(attribute, *_batchTransaction))
 	{
-		return *handle;
+		return handle;
 	}
 
-	/// @todo add any additional readable attributes this class supports, including attributes inherited from the I/O component and the I/O batch
+	/// @todo handle any additional readable attributes this class supports, including attributes inherited from the I/O component and the batch transaction
 
-	return data::ReadHandle::Error::Unknown;
+	return std::nullopt;
 }
 
 auto TemplateInput::attachInput(memory::Array &dataArray, std::size_t &eventCount) -> void
