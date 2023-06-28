@@ -139,7 +139,7 @@ auto TemplateOutputHandler<ValueType>::updateReadState(WriteSentinel &writeSenti
 	std::chrono::system_clock::time_point timeStamp,
 	const utils::eh::expected<std::reference_wrapper<const ReadCommand::Payload>, std::error_code> &payloadOrError,
 	const CommonReadState::Changes &commonChanges,
-	PendingEventList &eventsToFire) -> void
+	PendingEventList &eventsToRaise) -> void
 {
 	// Check if we have a valid payload
 	if (payloadOrError)
@@ -178,13 +178,13 @@ auto TemplateOutputHandler<ValueType>::updateReadState(WriteSentinel &writeSenti
 		// because std::integral is true for *bool*, *char*, *wchar_t*, *char8_t*, *char16_t*, and *char32_t*, which is generally not desirable.
 
 		// Update the read state
-		_readState.update(writeSentinel, timeStamp, value, commonChanges, eventsToFire);
+		_readState.update(writeSentinel, timeStamp, value, commonChanges, eventsToRaise);
 	}
 	// We have an error
 	else
 	{
 		// Update the read state with the error
-		_readState.update(writeSentinel, timeStamp, utils::eh::unexpected(payloadOrError.error()), commonChanges, eventsToFire);
+		_readState.update(writeSentinel, timeStamp, utils::eh::unexpected(payloadOrError.error()), commonChanges, eventsToRaise);
 	}
 }
 
@@ -241,10 +241,10 @@ template <typename ValueType>
 auto TemplateOutputHandler<ValueType>::updateWriteState(WriteSentinel &writeSentinel,
 	std::chrono::system_clock::time_point timeStamp,
 	std::error_code error,
-	PendingEventList &eventsToFire) -> void
+	PendingEventList &eventsToRaise) -> void
 {
 	// Update the write state
-	_writeState.update(writeSentinel, timeStamp, error, eventsToFire);
+	_writeState.update(writeSentinel, timeStamp, error, eventsToRaise);
 }
 
 /// @class xentara::plugins::templateDriver::TemplateOutputHandler

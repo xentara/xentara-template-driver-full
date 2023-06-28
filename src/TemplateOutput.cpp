@@ -294,7 +294,7 @@ auto TemplateOutput::updateReadState(WriteSentinel &writeSentinel,
 	std::chrono::system_clock::time_point timeStamp,
 	const utils::eh::expected<std::reference_wrapper<const ReadCommand::Payload>, std::error_code> &payloadOrError,
 	const CommonReadState::Changes &commonChanges,
-	PendingEventList &eventsToFire) -> void
+	PendingEventList &eventsToRaise) -> void
 {
 	// updateReadState() must not be called before the configuration was loaded, so the handler should have been
 	// created already.
@@ -304,7 +304,7 @@ auto TemplateOutput::updateReadState(WriteSentinel &writeSentinel,
 	}
 
 	// Forward the request to the handler
-	_handler->updateReadState(writeSentinel, timeStamp, payloadOrError, commonChanges, eventsToFire);
+	_handler->updateReadState(writeSentinel, timeStamp, payloadOrError, commonChanges, eventsToRaise);
 }
 
 auto TemplateOutput::addToWriteCommand(WriteCommand &command) -> bool
@@ -336,7 +336,7 @@ auto TemplateOutput::attachOutput(memory::Array &dataArray, std::size_t &eventCo
 auto TemplateOutput::updateWriteState(WriteSentinel &writeSentinel,
 	std::chrono::system_clock::time_point timeStamp,
 	std::error_code error,
-	PendingEventList &eventsToFire) -> void
+	PendingEventList &eventsToRaise) -> void
 {
 	// updateWriteState() must not be called before the configuration was loaded, so the handler should have been
 	// created already.
@@ -346,7 +346,7 @@ auto TemplateOutput::updateWriteState(WriteSentinel &writeSentinel,
 	}
 
 	// Forward the request to the handler
-	_handler->updateWriteState(writeSentinel, timeStamp, error, eventsToFire);
+	_handler->updateWriteState(writeSentinel, timeStamp, error, eventsToRaise);
 }
 
 } // namespace xentara::plugins::templateDriver

@@ -82,9 +82,9 @@ public:
 	/// @brief Attaches the read state to a batch transaction
 	/// @param dataArray The data array that the attributes should be added to. The caller will use the information in this array
 	/// to allocate the data block.
-	/// @param eventCount A variable that counts the total number of events than can be fired for a single update.
-	/// The maximum number of events that update() will request to be fired will be added to this variable. The caller will use this
-	/// event count to preallocate a buffer when collecting the events to fire after an update.
+	/// @param eventCount A variable that counts the total number of events than can be raised for a single update.
+	/// The maximum number of events that update() will request to be raised will be added to this variable. The caller will use this
+	/// event count to preallocate a buffer when collecting the events to raise after an update.
 	virtual auto attachReadState(memory::Array &dataArray, std::size_t &eventCount) -> void = 0;
 
 	/// @brief Updates the read state and collects the events to send
@@ -93,22 +93,22 @@ public:
 	/// @param payloadOrError This is a variant-like type that will hold either the payload of the read command, or an std::error_code object
 	/// containing a read error.
 	/// @param commonChanges An object containing information about which parts of the common read state changed, if any.
-	/// @param eventsToFire Any events that need to be fired as a result of the update will be added to this
-	/// list. The events will not be fired directly, because the write sentinel needs to be commited first,
+	/// @param eventsToRaise Any events that need to be raised as a result of the update will be added to this
+	/// list. The events will not be raised directly, because the write sentinel needs to be commited first,
 	/// which is done by the caller.
 	/// @todo add parameters needed to decode the value from the payload of a read command, like e.g. a data offset.
 	virtual auto updateReadState(WriteSentinel &writeSentinel,
 		std::chrono::system_clock::time_point timeStamp,
 		const utils::eh::expected<std::reference_wrapper<const ReadCommand::Payload>, std::error_code> &payloadOrError,
 		const CommonReadState::Changes &commonChanges,
-		PendingEventList &eventsToFire) -> void = 0;
+		PendingEventList &eventsToRaise) -> void = 0;
 		
 	/// @brief Attaches the write state to a batch transaction
 	/// @param dataArray The data array that the attributes should be added to. The caller will use the information in this array
 	/// to allocate the data block.
-	/// @param eventCount A variable that counts the total number of events than can be fired for a single update.
-	/// The maximum number of events that update() will request to be fired will be added to this variable. The caller will use this
-	/// event count to preallocate a buffer when collecting the events to fire after an update.
+	/// @param eventCount A variable that counts the total number of events than can be raised for a single update.
+	/// The maximum number of events that update() will request to be raised will be added to this variable. The caller will use this
+	/// event count to preallocate a buffer when collecting the events to raise after an update.
 	virtual auto attachWriteState(memory::Array &dataArray, std::size_t &eventCount) -> void = 0;
 
 	/// @brief Adds any pending output value to a write command.
@@ -120,14 +120,14 @@ public:
 	/// @param writeSentinel A write sentinel for the data block the data is stored in
 	/// @param timeStamp The update time stamp
 	/// @param error The error code, or a default constructed std::error_code object if no error occurred
-	/// @param eventsToFire Any events that need to be fired as a result of the update will be added to this
-	/// list. The events will not be fired directly, because the write sentinel needs to be commited first,
+	/// @param eventsToRaise Any events that need to be raised as a result of the update will be added to this
+	/// list. The events will not be raised directly, because the write sentinel needs to be commited first,
 	/// which is done by the caller.
 	virtual auto updateWriteState(
 		WriteSentinel &writeSentinel,
 		std::chrono::system_clock::time_point timeStamp,
 		std::error_code error,
-		PendingEventList &eventsToFire) -> void = 0;
+		PendingEventList &eventsToRaise) -> void = 0;
 };
 
 inline AbstractTemplateOutputHandler::~AbstractTemplateOutputHandler() = default;

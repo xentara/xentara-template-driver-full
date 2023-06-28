@@ -108,7 +108,7 @@ auto TemplateInputHandler<ValueType>::updateReadState(WriteSentinel &writeSentin
 	std::chrono::system_clock::time_point timeStamp,
 	const utils::eh::expected<std::reference_wrapper<const ReadCommand::Payload>, std::error_code> &payloadOrError,
 	const CommonReadState::Changes &commonChanges,
-	PendingEventList &eventsToFire) -> void
+	PendingEventList &eventsToRaise) -> void
 {
 	// Check if we have a valid payload
 	if (payloadOrError)
@@ -147,13 +147,13 @@ auto TemplateInputHandler<ValueType>::updateReadState(WriteSentinel &writeSentin
 		// because std::integral is true for *bool*, *char*, *wchar_t*, *char8_t*, *char16_t*, and *char32_t*, which is generally not desirable.
 
 		// Update the read state
-		_state.update(writeSentinel, timeStamp, value, commonChanges, eventsToFire);	
+		_state.update(writeSentinel, timeStamp, value, commonChanges, eventsToRaise);	
 	}
 	// We have an error
 	else
 	{
 		// Update the state with the error
-		_state.update(writeSentinel, timeStamp, utils::eh::unexpected(payloadOrError.error()), commonChanges, eventsToFire);
+		_state.update(writeSentinel, timeStamp, utils::eh::unexpected(payloadOrError.error()), commonChanges, eventsToRaise);
 	}
 }
 
