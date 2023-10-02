@@ -20,16 +20,10 @@ namespace xentara::plugins::templateDriver
 	
 using namespace std::literals;
 
-TemplateInput::Class TemplateInput::Class::_instance;
-
-auto TemplateInput::loadConfig(const ConfigIntializer &initializer,
-		utils::json::decoder::Object &jsonObject,
-		config::Resolver &resolver,
-		const config::FallbackHandler &fallbackHandler) -> void
+auto TemplateInput::load(utils::json::decoder::Object &jsonObject,
+	config::Resolver &resolver,
+	const config::FallbackHandler &fallbackHandler) -> void
 {
-	// Get a reference that allows us to modify our own config attributes
-    auto &&configAttributes = initializer[Class::instance().configHandle()];
-
 	// Go through all the members of the JSON object that represents this object
 	bool ioBatchLoaded = false;
 	for (auto && [name, value] : jsonObject)
@@ -62,7 +56,7 @@ auto TemplateInput::loadConfig(const ConfigIntializer &initializer,
 				utils::json::decoder::throwWithLocation(value, std::runtime_error("TODO is wrong with TODO parameter of template input"));
 			}
 
-			/// @todo set the appropriate member variables, and update configAttributes accordingly (if necessary) 
+			/// @todo set the appropriate member variables
 		}
 		else
 		{
