@@ -117,16 +117,6 @@ public:
 
 	/// @}
 
-protected:
-	/// @name Virtual Overrides for skill::Element
-	/// @{
-
-	auto load(utils::json::decoder::Object &jsonObject,
-		config::Resolver &resolver,
-		const config::FallbackHandler &fallbackHandler) -> void final;
-
-	/// @}
-
 private:
 	// The tasks need access to out private member functions
 	friend class ReadTask<TemplateBatchTransaction>;
@@ -175,6 +165,13 @@ private:
 	/// @param outputs The outputs to update
 	auto updateOutputs(
 		std::chrono::system_clock::time_point timeStamp, std::error_code error, const OutputList &outputs) -> void;
+
+	/// @name Virtual Overrides for skill::Element
+	/// @{
+
+	auto load(utils::json::decoder::Object &jsonObject, config::Context &context) -> void final;
+
+	/// @}
 
 	/// @brief The I/O component this batch belongs to
 	/// @todo give this a more descriptive name, e.g. "_device"

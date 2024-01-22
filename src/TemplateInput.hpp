@@ -69,19 +69,16 @@ public:
 		
 	/// @}
 
-protected:
-	/// @name Virtual Overrides for skill::DataPoint
-	/// @{
-
-	auto load(utils::json::decoder::Object &jsonObject,
-		config::Resolver &resolver,
-		const config::FallbackHandler &fallbackHandler) -> void final;
-
-	/// @}
-
 private:
 	/// @brief Creates an input handler based on a configuration value
 	auto createHandler(utils::json::decoder::Value &value) -> std::unique_ptr<AbstractTemplateInputHandler>;
+
+	/// @name Virtual Overrides for skill::DataPoint
+	/// @{
+
+	auto load(utils::json::decoder::Object &jsonObject, config::Context &context) -> void final;
+
+	/// @}
 
 	/// @brief The I/O component this input belongs to
 	/// @todo give this a more descriptive name, e.g. "_device"
