@@ -2,7 +2,7 @@
 #include "TemplateInputHandler.hpp"
 
 #include "Attributes.hpp"
-#include "TemplateBatchTransaction.hpp"
+#include "TemplateIoTransaction.hpp"
 
 #include <xentara/data/DataType.hpp>
 #include <xentara/data/ReadHandle.hpp>
@@ -49,7 +49,7 @@ auto TemplateInputHandler<ValueType>::dataType() const -> const data::DataType &
 }
 
 template <typename ValueType>
-auto TemplateInputHandler<ValueType>::forEachAttribute(const model::ForEachAttributeFunction &function, TemplateBatchTransaction &batchTransaction) const -> bool
+auto TemplateInputHandler<ValueType>::forEachAttribute(const model::ForEachAttributeFunction &function, TemplateIoTransaction &ioTransaction) const -> bool
 {
 	return
 		// Handle the value attribute separately
@@ -57,25 +57,25 @@ auto TemplateInputHandler<ValueType>::forEachAttribute(const model::ForEachAttri
 
 		// Handle the state attributes
 		_state.forEachAttribute(function) ||
-		// Also handle the common read state attributes from the batch transaction
-		batchTransaction.forEachReadStateAttribute(function);
+		// Also handle the common read state attributes from the I/O transaction
+		ioTransaction.forEachReadStateAttribute(function);
 }
 
 template <typename ValueType>
-auto TemplateInputHandler<ValueType>::forEachEvent(const model::ForEachEventFunction &function, TemplateBatchTransaction &batchTransaction, std::shared_ptr<void> parent) -> bool
+auto TemplateInputHandler<ValueType>::forEachEvent(const model::ForEachEventFunction &function, TemplateIoTransaction &ioTransaction, std::shared_ptr<void> parent) -> bool
 {
 	return
 		// Handle the state events
 		_state.forEachEvent(function, parent) ||
-		// Also handle the common read state events from the batch transaction
-		batchTransaction.forEachReadStateEvent(function);
+		// Also handle the common read state events from the I/O transaction
+		ioTransaction.forEachReadStateEvent(function);
 }
 
 template <typename ValueType>
-auto TemplateInputHandler<ValueType>::makeReadHandle(const model::Attribute &attribute, TemplateBatchTransaction &batchTransaction) const noexcept -> std::optional<data::ReadHandle>
+auto TemplateInputHandler<ValueType>::makeReadHandle(const model::Attribute &attribute, TemplateIoTransaction &ioTransaction) const noexcept -> std::optional<data::ReadHandle>
 {
 	// Get the data block
-	const auto &dataBlock = batchTransaction.readDataBlock();
+	const auto &dataBlock = ioTransaction.readDataBlock();
 	
 	// Handle the value attribute separately
 	if (attribute == kValueAttribute)
@@ -88,8 +88,8 @@ auto TemplateInputHandler<ValueType>::makeReadHandle(const model::Attribute &att
 	{
 		return handle;
 	}
-	// Also handle the common read state attributes from the batch transaction
-	if (auto handle = batchTransaction.makeReadStateReadHandle(attribute))
+	// Also handle the common read state attributes from the I/O transaction
+	if (auto handle = ioTransaction.makeReadStateReadHandle(attribute))
 	{
 		return handle;
 	}

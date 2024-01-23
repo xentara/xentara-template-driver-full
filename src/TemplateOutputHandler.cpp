@@ -2,7 +2,7 @@
 #include "TemplateOutputHandler.hpp"
 
 #include "Attributes.hpp"
-#include "TemplateBatchTransaction.hpp"
+#include "TemplateIoTransaction.hpp"
 
 #include <xentara/data/DataType.hpp>
 #include <xentara/data/ReadHandle.hpp>
@@ -50,7 +50,7 @@ auto TemplateOutputHandler<ValueType>::dataType() const -> const data::DataType 
 }
 
 template <typename ValueType>
-auto TemplateOutputHandler<ValueType>::forEachAttribute(const model::ForEachAttributeFunction &function, TemplateBatchTransaction &batchTransaction) const -> bool
+auto TemplateOutputHandler<ValueType>::forEachAttribute(const model::ForEachAttributeFunction &function, TemplateIoTransaction &ioTransaction) const -> bool
 {
 	return
 		// Handle the value attribute separately
@@ -58,32 +58,32 @@ auto TemplateOutputHandler<ValueType>::forEachAttribute(const model::ForEachAttr
 
 		// Handle the read state attributes
 		_readState.forEachAttribute(function) ||
-		// Also handle the common read state attributes from the batch transaction
-		batchTransaction.forEachReadStateAttribute(function) ||
+		// Also handle the common read state attributes from the I/O transaction
+		ioTransaction.forEachReadStateAttribute(function) ||
 
 		// Handle the write state attributes
 		_writeState.forEachAttribute(function);
 }
 
 template <typename ValueType>
-auto TemplateOutputHandler<ValueType>::forEachEvent(const model::ForEachEventFunction &function, TemplateBatchTransaction &batchTransaction, std::shared_ptr<void> parent) -> bool
+auto TemplateOutputHandler<ValueType>::forEachEvent(const model::ForEachEventFunction &function, TemplateIoTransaction &ioTransaction, std::shared_ptr<void> parent) -> bool
 {
 	return
 		// Handle the read state events
 		_readState.forEachEvent(function, parent) ||
-		// Also handle the common read state events from the batch transaction
-		batchTransaction.forEachReadStateEvent(function) ||
+		// Also handle the common read state events from the I/O transaction
+		ioTransaction.forEachReadStateEvent(function) ||
 
 		// Handle the write state events
 		_writeState.forEachEvent(function, parent);
 }
 
 template <typename ValueType>
-auto TemplateOutputHandler<ValueType>::makeReadHandle(const model::Attribute &attribute, TemplateBatchTransaction &batchTransaction) const noexcept -> std::optional<data::ReadHandle>
+auto TemplateOutputHandler<ValueType>::makeReadHandle(const model::Attribute &attribute, TemplateIoTransaction &ioTransaction) const noexcept -> std::optional<data::ReadHandle>
 {
 	// Get the data blocks
-	const auto &readDataBlock = batchTransaction.readDataBlock();
-	const auto &writeDataBlock = batchTransaction.writeDataBlock();
+	const auto &readDataBlock = ioTransaction.readDataBlock();
+	const auto &writeDataBlock = ioTransaction.writeDataBlock();
 	
 	// Handle the value attribute separately
 	if (attribute == kValueAttribute)
@@ -96,8 +96,8 @@ auto TemplateOutputHandler<ValueType>::makeReadHandle(const model::Attribute &at
 	{
 		return handle;
 	}
-	// Also handle the common read state attributes from the batch transaction
-	if (auto handle = batchTransaction.makeReadStateReadHandle(attribute))
+	// Also handle the common read state attributes from the I/O transaction
+	if (auto handle = ioTransaction.makeReadStateReadHandle(attribute))
 	{
 		return handle;
 	}
@@ -112,7 +112,7 @@ auto TemplateOutputHandler<ValueType>::makeReadHandle(const model::Attribute &at
 }
 
 template <typename ValueType>
-auto TemplateOutputHandler<ValueType>::makeWriteHandle(const model::Attribute &attribute, TemplateBatchTransaction &batchTransaction, std::shared_ptr<void> parent) noexcept -> std::optional<data::WriteHandle>
+auto TemplateOutputHandler<ValueType>::makeWriteHandle(const model::Attribute &attribute, TemplateIoTransaction &ioTransaction, std::shared_ptr<void> parent) noexcept -> std::optional<data::WriteHandle>
 {
 	// Handle the value attribute, which is the only writable attribute
 	if (attribute == kValueAttribute)

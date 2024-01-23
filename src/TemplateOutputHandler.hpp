@@ -15,7 +15,7 @@ namespace xentara::plugins::templateDriver
 
 using namespace std::literals;
 
-class TemplateBatchTransaction;
+class TemplateIoTransaction;
 
 /// @brief Data type specific functionality for TemplateOutput.
 ///
@@ -33,13 +33,13 @@ public:
 
 	auto dataType() const -> const data::DataType & final;
 
-	auto forEachAttribute(const model::ForEachAttributeFunction &function, TemplateBatchTransaction &batchTransaction) const -> bool final;
+	auto forEachAttribute(const model::ForEachAttributeFunction &function, TemplateIoTransaction &ioTransaction) const -> bool final;
 
-	auto forEachEvent(const model::ForEachEventFunction &function, TemplateBatchTransaction &batchTransaction, std::shared_ptr<void> parent) -> bool final;
+	auto forEachEvent(const model::ForEachEventFunction &function, TemplateIoTransaction &ioTransaction, std::shared_ptr<void> parent) -> bool final;
 
-	auto makeReadHandle(const model::Attribute &attribute, TemplateBatchTransaction &batchTransaction) const noexcept -> std::optional<data::ReadHandle> final;
+	auto makeReadHandle(const model::Attribute &attribute, TemplateIoTransaction &ioTransaction) const noexcept -> std::optional<data::ReadHandle> final;
 
-	auto makeWriteHandle(const model::Attribute &attribute, TemplateBatchTransaction &batchTransaction, std::shared_ptr<void> parent) noexcept -> std::optional<data::WriteHandle> final;
+	auto makeWriteHandle(const model::Attribute &attribute, TemplateIoTransaction &ioTransaction, std::shared_ptr<void> parent) noexcept -> std::optional<data::WriteHandle> final;
 	
 	auto attachReadState(memory::Array &dataArray, std::size_t &eventCount) -> void final;
 

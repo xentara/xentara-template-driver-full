@@ -24,7 +24,7 @@
 namespace xentara::plugins::templateDriver
 {
 
-class TemplateBatchTransaction;
+class TemplateIoTransaction;
 
 // Base class for data type specific functionality for TemplateInput.
 /// @todo rename this class to something more descriptive
@@ -42,13 +42,13 @@ public:
 
 	/// @brief Iterates over all the attributes.
 	/// @param function The function that should be called for each attribute
-	/// @param batchTransaction The batch transaction this output is attached to. This is used to handle inherited attributes.
+	/// @param ioTransaction The I/O transaction this output is attached to. This is used to handle inherited attributes.
 	/// @return The return value of the last function call
-	virtual auto forEachAttribute(const model::ForEachAttributeFunction &function, TemplateBatchTransaction &batchTransaction) const -> bool = 0;
+	virtual auto forEachAttribute(const model::ForEachAttributeFunction &function, TemplateIoTransaction &ioTransaction) const -> bool = 0;
 
 	/// @brief Iterates over all the events that belong to this state.
 	/// @param function The function that should be called for each events
-	/// @param batchTransaction The batch transaction this output is attached to. This is used to handle inherited events.
+	/// @param ioTransaction The I/O transaction this output is attached to. This is used to handle inherited events.
 	/// @param parent
 	/// @parblock
 	/// A shared pointer to the containing object.
@@ -57,15 +57,15 @@ public:
 	/// so that they will share ownership information with pointers to the parent object.
 	/// @endparblock
 	/// @return The return value of the last function call
-	virtual auto forEachEvent(const model::ForEachEventFunction &function, TemplateBatchTransaction &batchTransaction, std::shared_ptr<void> parent) -> bool = 0;
+	virtual auto forEachEvent(const model::ForEachEventFunction &function, TemplateIoTransaction &ioTransaction, std::shared_ptr<void> parent) -> bool = 0;
 
 	/// @brief Creates a read-handle for an attribute that belong to this state.
 	/// @param attribute The attribute to create the handle for
-	/// @param batchTransaction The batch transaction this input is attached to. This is used to handle inherited attributes.
+	/// @param ioTransaction The I/O transaction this input is attached to. This is used to handle inherited attributes.
 	/// @return A read handle for the attribute, or std::nullopt if the attribute is unknown
-	virtual auto makeReadHandle(const model::Attribute &attribute, TemplateBatchTransaction &batchTransaction) const noexcept -> std::optional<data::ReadHandle> = 0;
+	virtual auto makeReadHandle(const model::Attribute &attribute, TemplateIoTransaction &ioTransaction) const noexcept -> std::optional<data::ReadHandle> = 0;
 	
-	/// @brief Attaches the read state to a batch transaction
+	/// @brief Attaches the read state to an I/O transaction
 	/// @param dataArray The data array that the attributes should be added to. The caller will use the information in this array
 	/// to allocate the data block.
 	/// @param eventCount A variable that counts the total number of events than can be raised for a single update.
