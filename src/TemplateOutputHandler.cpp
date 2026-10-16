@@ -198,7 +198,7 @@ template <typename ValueType>
 auto TemplateOutputHandler<ValueType>::addToWriteCommand(WriteCommand &command) -> bool
 {
 	// Get the value
-	auto pendingValue = _pendingOutputValue.dequeue();
+	auto pendingValue = _pendingOutputValue.pop();
 	// If there was no pending value, do nothing
 	if (!pendingValue)
 	{

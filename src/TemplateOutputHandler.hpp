@@ -4,9 +4,9 @@
 #include "AbstractTemplateOutputHandler.hpp"
 #include "PerValueReadState.hpp"
 #include "WriteState.hpp"
-#include "SingleValueQueue.hpp"
 
 #include <xentara/model/Attribute.hpp>
+#include <xentara/utils/lockFree/SingleElementBuffer.hpp>
 
 #include <string>
 
@@ -77,7 +77,7 @@ private:
 	/// This function is called by the value write handle.
 	auto scheduleOutputValue(ValueType value) noexcept
 	{
-		_pendingOutputValue.enqueue(value);
+		_pendingOutputValue.push(std::move(value));
 	}
 
 	/// @brief The read state
@@ -86,7 +86,7 @@ private:
 	WriteState _writeState;
 
 	/// @brief The queue for the pending output value
-	SingleValueQueue<ValueType> _pendingOutputValue;
+	utils::lockFree::SingleElementBuffer<ValueType> _pendingOutputValue;
 };
 
 /// @class xentara::plugins::templateDriver::TemplateOutputHandler
